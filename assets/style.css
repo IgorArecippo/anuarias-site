@@ -1888,3 +1888,5 @@ a.now-cover:hover .cover-xs { outline: 2px solid var(--accent-2); outline-offset
 .play-status a:hover { color: var(--ink, #F3E9D8); }
 .spotify-session { margin-top: 8px; }
 .spotify-session a { color: inherit; }
+/* Os amigos (sem Spotify conectado) já abrem o disco pelo Play. */
+[data-modo="publico"]:not(.spotify-on) .album-link { display: none; }

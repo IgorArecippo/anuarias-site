@@ -70,11 +70,11 @@
     return '<a class="dig-year" href="ano-' + year + '.html" style="background:' + color + ";color:" + textOn(color) +
       '">Anuária ' + year + "</a>";
   }
-  function playButton(album, label) {
+  function playButton(album) {
     if (!album.py || !album.pt) return "";
     return '<a class="btn-play js-play" href="#" data-year="' + album.py + '" data-track="' + esc(album.pt) +
-      '" style="background:' + accent(album.py) + ";color:" + textOn(accent(album.py)) + '">' +
-      (label || "▶ Tocar na Anuária " + album.py) + "</a>";
+      '" data-album="' + esc(album.u || "") + '" style="background:' + accent(album.py) + ";color:" +
+      textOn(accent(album.py)) + '">\u25b6\ufe0e Play</a>';
   }
   function vinyl(album) {
     return '<div class="vinyl" aria-hidden="true"><div class="vinyl-label">' + cover(album.i) + "</div></div>";
@@ -159,7 +159,7 @@
         '<h3><a href="' + href(album.s) + '">' + esc(album.a) + "</a></h3>" +
         '<p class="artist">' + esc(album.r) + "</p>" +
         '<p class="rec-meta">' + esc(lastHeard(album)) + "</p>" +
-        '<div class="rec-actions">' + playButton(album, "▶ Tocar") + '<span class="play-status" role="status"></span></div>' +
+        '<div class="rec-actions">' + playButton(album) + '<span class="play-status" role="status"></span></div>' +
         "</div></article>";
     }).join("");
     box.innerHTML =

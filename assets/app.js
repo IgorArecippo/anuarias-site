@@ -311,15 +311,15 @@
   update();
 })();
 
-// "Tocar na Anuária": o Spotify toca a playlist do ano a partir da primeira
-// faixa do disco. Vale pra qualquer botão .js-play (página do disco, garimpo);
-// o retorno aparece no .play-status mais perto.
-//   - No Mac (data-modo="mac"), quem manda tocar é o serve.py, com o login
-//     guardado no .env.
-//   - Na versão publicada (data-modo="publico"), cada um entra com a própria
-//     conta do Spotify, direto do navegador (PKCE: sem segredo nenhum no site).
-//     O app do Spotify está em modo de desenvolvimento: só toca pra contas
-//     Premium cadastradas no painel; o resto ganha o link pra abrir a Anuária.
+// Botão "Play" (.js-play: página do disco, garimpo). O retorno aparece no
+// .play-status mais perto.
+//   - No Mac (data-modo="mac"), o serve.py manda o Spotify tocar a Anuária do
+//     ano a partir da primeira faixa do disco, com o login guardado no .env.
+//   - Na versão publicada (data-modo="publico"), o Play abre o disco no
+//     Spotify — sem login nenhum, é o que os amigos usam. Quem conectar o
+//     Spotify pelo link do rodapé (o dono: o app está em modo de
+//     desenvolvimento, só toca pra contas cadastradas no painel) volta a tocar
+//     dentro da Anuária, direto do navegador (PKCE: sem segredo no site).
 (function () {
   "use strict";
 
@@ -329,12 +329,23 @@
   var PLAYLISTS = JSON.parse(root.dataset.playlists || "{}");
   var MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  function playlistLink(year) {
-    var id = (PLAYLISTS[year] || "").split(":").pop();
+  // No celular o esquema spotify: abre o app (inclusive de dentro do "app"
+  // da tela de início); no computador, o player da web.
+  function spotifyLink(kind, id) {
     if (!id) return "";
-    // No celular o esquema spotify: abre o app (inclusive de dentro do
-    // "app" da tela de início); no computador, o player da web.
-    return MOBILE ? "spotify:playlist:" + id : "https://open.spotify.com/playlist/" + id;
+    return MOBILE ? "spotify:" + kind + ":" + id : "https://open.spotify.com/" + kind + "/" + id;
+  }
+  function playlistLink(year) {
+    return spotifyLink("playlist", (PLAYLISTS[year] || "").split(":").pop());
+  }
+  function albumLink(button) {
+    var match = /album\/([A-Za-z0-9]+)/.exec(button.dataset.album || "");
+    return match ? spotifyLink("album", match[1]) : playlistLink(button.dataset.year);
+  }
+  function openSpotify(link) {
+    if (!link) return;
+    if (MOBILE) location.href = link;
+    else window.open(link, "_blank", "noopener");
   }
 
   function ui(button) {
@@ -347,23 +358,13 @@
         status.textContent = text || "";
         status.classList.toggle("is-error", !!isError);
       },
-      sayHtml: function (markup, isError, onLogin) {
-        if (!status) return;
-        status.innerHTML = markup;
-        status.classList.toggle("is-error", !!isError);
-        var link = status.querySelector(".js-spotify-login");
-        if (link && onLogin) link.addEventListener("click", function (event) {
-          event.preventDefault();
-          onLogin();
-        });
-      },
       busy: function () {
         button.classList.add("is-busy");
         button.textContent = "Tocando…";
       },
       done: function (ok) {
         button.classList.remove("is-busy");
-        button.textContent = ok ? "▶ Tocando" : label;
+        button.textContent = ok ? "\u25b6\ufe0e Tocando" : label;
         if (ok) setTimeout(function () { if (!button.classList.contains("is-busy")) button.textContent = label; }, 4000);
       }
     };
@@ -517,20 +518,11 @@
     return error;
   }
 
-  function openLink(year, text) {
-    var link = playlistLink(year);
-    return link ? '<a href="' + link + '" target="_blank" rel="noopener">' + text + "</a>" : "";
-  }
-
   function playPublic(button, view) {
     var year = button.dataset.year;
     var track = button.dataset.track;
     if (!store("token")) {
-      view.done(false);
-      view.sayHtml(
-        (CLIENT_ID && !store("off") ? '<a href="#" class="js-spotify-login">Entre com o Spotify</a> pra tocar aqui · ' : "") +
-        openLink(year, "abrir a Anuária " + year + " no Spotify"),
-        false, function () { login({ year: year, track: track }); });
+      openSpotify(albumLink(button));
       return;
     }
     view.busy();
@@ -544,35 +536,28 @@
         // Nenhum Spotify aberto: abre o app na Anuária e, quando a pessoa
         // voltar pra cá, tenta de novo (o app já vai estar na lista).
         view.done(false);
-        view.sayHtml("abra o Spotify (" + openLink(year, "aqui") + ") e volte pra cá que eu dou o play");
-        waitForReturn(button);
-        var link = playlistLink(year);
-        if (link && MOBILE) location.href = link;
+        view.say("abri o Spotify — volte pra cá que eu dou o play");
+        waiting = button;
+        openSpotify(playlistLink(year));
       })
       .catch(function (error) {
         view.done(false);
-        if (error.kind === "premium") {
-          view.sayHtml("o Spotify só deixa tocar daqui em contas Premium · " + openLink(year, "abrir a Anuária"), true);
-        } else if (error.kind === "not-listed") {
-          store("token", null);
-          store("off", true);
-          renderSession();
-          view.sayHtml("sua conta do Spotify não está liberada neste site · " + openLink(year, "abrir a Anuária"), true);
-        } else if (error.kind === "login") {
+        if (error.kind === "login") {
           store("token", null);
           renderSession();
-          view.sayHtml('o login do Spotify expirou · <a href="#" class="js-spotify-login">entrar de novo</a>', true,
-                       function () { login({ year: year, track: track }); });
+          view.say("o login do Spotify expirou — conecte de novo no rodapé", true);
+        } else if (error.kind === "not-listed" || error.kind === "premium") {
+          // Conta que o app não deixa controlar: fica no modo dos amigos.
+          store("token", null);
+          renderSession();
+          openSpotify(albumLink(button));
         } else {
-          view.sayHtml("não deu pra tocar (" + error.message + ") · " + openLink(year, "abrir a Anuária"), true);
+          view.say("não deu pra tocar (" + error.message + ")", true);
         }
       });
   }
 
   var waiting = null;
-  function waitForReturn(button) {
-    waiting = button;
-  }
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState !== "visible" || !waiting) return;
     var button = waiting;
@@ -601,24 +586,26 @@
 
   if (!PUBLIC) return;
 
-  // Rodapé: quem está conectado, e como sair.
+  // Rodapé: conectar o Spotify (discreto: é pro dono) ou sair. Conectado,
+  // o <html> ganha .spotify-on e aparece o "Disco no Spotify" ao lado do Play.
   function renderSession() {
+    var on = !!store("token");
+    root.classList.toggle("spotify-on", on);
     var footer = document.querySelector(".footer");
-    if (!footer) return;
+    if (!footer || !CLIENT_ID) return;
     var line = footer.querySelector(".spotify-session");
-    if (!store("token")) {
-      if (line) line.remove();
-      return;
-    }
     if (!line) {
       line = document.createElement("p");
       line.className = "spotify-session";
       footer.appendChild(line);
     }
-    line.innerHTML = 'Spotify conectado: o "Tocar" toca na sua conta · <a href="#">sair</a>';
+    line.innerHTML = on
+      ? 'Spotify conectado: o Play toca dentro da Anuária · <a href="#">sair</a>'
+      : '<a href="#">Conectar o Spotify</a> (só pra contas liberadas no app)';
     line.querySelector("a").addEventListener("click", function (event) {
       event.preventDefault();
-      logout();
+      if (on) logout();
+      else login(null);
     });
   }
 
@@ -636,7 +623,6 @@
       redirect_uri: REDIRECT,
       code_verifier: pending.verifier
     }).then(function () {
-      store("off", null);
       if (pending.pending) store("play-next", pending.pending);
       if (pending.back && pending.back.split("?")[0] !== location.href.split("?")[0]) location.replace(pending.back);
       else resume();
