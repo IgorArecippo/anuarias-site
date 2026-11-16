@@ -168,3 +168,11 @@
 
   draw(tabs.querySelector("button.active").dataset.year);
 })();
+
+// Descobertas: no celular, com mais anos do que cabem, o gráfico rola de
+// lado — começa mostrando os mais recentes.
+(function () {
+  "use strict";
+  var box = document.querySelector(".discoveries");
+  if (box) box.scrollLeft = box.scrollWidth;
+})();

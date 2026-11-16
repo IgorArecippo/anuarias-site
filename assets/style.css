@@ -1945,3 +1945,16 @@ a:focus-visible, button:focus-visible, select:focus-visible, label:focus-visible
   .dig-browse:not(.filters-open) .dig-filters { display: none; }
   .dig-browse.filters-open .dig-filters { margin-top: 14px; }
 }
+
+/* Gráficos com uma coluna por ano: a cada Anuária entra mais uma. */
+.tl-year b i { font-style: normal; }
+@media (max-width: 600px) {
+  .tl-dense .tl-year b i { display: none; }
+  /* Descobertas: cada coluna tem uma largura mínima; quando não couberem
+     todas, o gráfico rola de lado (o historico.js começa pelo ano mais novo). */
+  .discoveries { grid-auto-columns: minmax(23px, 1fr); overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .discoveries::-webkit-scrollbar { display: none; }
+}
+
+/* Avisos que só interessam ao dono, no Mac. */
+[data-modo="publico"] .only-mac { display: none; }
