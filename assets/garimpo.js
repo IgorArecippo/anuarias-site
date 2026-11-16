@@ -341,6 +341,12 @@
     document.getElementById("dig-count").innerHTML = "<b>" + number(list.length) + "</b> " +
       (list.length === 1 ? "disco" : "discos") + (activeCount() ? " com esses filtros" : " nas Anuárias");
     document.getElementById("dig-clear").hidden = !activeCount();
+    // No celular os filtros ficam recolhidos atrás deste botão.
+    var picked = activeCount() - (state.q ? 1 : 0);
+    var toggle = document.getElementById("dig-filter-toggle");
+    var opened = document.getElementById("garimpar").classList.contains("filters-open");
+    toggle.innerHTML = "Filtros" + (picked ? " <b>" + picked + "</b>" : "") + "<span>" + (opened ? "▴" : "▾") + "</span>";
+    toggle.setAttribute("aria-expanded", opened);
     var more = document.getElementById("dig-more");
     more.hidden = list.length <= state.shown;
     more.textContent = "mostrar mais (" + number(list.length - state.shown) + ")";
@@ -448,6 +454,10 @@
     state.shown = PAGE_SIZE;
     render();
   });
+  document.getElementById("dig-filter-toggle").addEventListener("click", function () {
+    document.getElementById("garimpar").classList.toggle("filters-open");
+    render();
+  });
   document.getElementById("dig-clear").addEventListener("click", clearFilters);
   document.getElementById("dig-more").addEventListener("click", function () {
     state.shown += PAGE_SIZE;
@@ -460,7 +470,7 @@
     event.preventDefault();
     clearFilters();
     var pair = link.dataset.quick.split("=");
-    state[pair[0]] = [pair[1]];
+    state[pair[0]] = pair[1].split(",");
     render();
     document.getElementById("garimpar").scrollIntoView({ behavior: "smooth" });
   });

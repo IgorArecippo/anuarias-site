@@ -4,7 +4,7 @@
   --surface-2: #2C2038;
   --border: rgba(243, 233, 216, .12);
   --text: #F3E9D8;
-  --muted: rgba(243, 233, 216, .55);
+  --muted: rgba(243, 233, 216, .62);
   --accent: #E8622A;   /* laranja queimado — aceita texto escuro em cima */
   --accent-2: #D6A536; /* mostarda — aceita texto escuro em cima */
   --accent-3: #5B4B8A; /* violeta — só como fundo de chip, sempre texto claro */
@@ -485,7 +485,7 @@ a.album-link:hover h3 { color: var(--accent); }
   background: var(--surface-2);
   border-radius: 999px;
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: 11.5px;
 }
 
 .badges .genre { color: var(--accent-2); background: rgba(214, 165, 54, .1); }
@@ -985,7 +985,7 @@ a.record:hover { border-color: rgba(232, 98, 42, .5); }
   grid-template-columns: repeat(24, minmax(0, 1fr));
   gap: 3px;
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: 11px;
 }
 .hm-hours span { white-space: nowrap; }
 
@@ -1172,11 +1172,12 @@ a.record:hover { border-color: rgba(232, 98, 42, .5); }
   .discoveries { gap: 4px; }
   .disc-top { font-size: 10px; overflow-wrap: normal; hyphens: auto; }
   .disc-count { font-size: 10.5px; }
+  .disc-year { font-size: 13px; letter-spacing: .02em; }
   .loyal-list { columns: 1; }
 }
 
 /* ---------- histórico: topo e navegação ---------- */
-.history-page .block { scroll-margin-top: 128px; }
+.history-page .block, .year-page .block { scroll-margin-top: 128px; }
 .history-hero { padding: 48px 0 8px; }
 .eyebrow {
   margin: 0 0 8px;
@@ -1326,7 +1327,7 @@ a.record:hover { border-color: rgba(232, 98, 42, .5); }
   .year-tabs::-webkit-scrollbar { display: none; }
   .year-tabs button { flex: none; }
   .chapters { margin-top: 22px; padding-top: 8px; padding-bottom: 8px; }
-  .history-page .block { scroll-margin-top: 124px; }
+  .history-page .block, .year-page .block { scroll-margin-top: 124px; }
 }
 
 /* Retorno do botão "Tocar na Anuária". */
@@ -1689,7 +1690,7 @@ button.btn-ghost { background: transparent; cursor: pointer; font: inherit; font
 .dig-card-link:hover h3 { color: var(--accent-2); }
 .dig-card p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
 .dig-vibes { display: flex; flex-wrap: wrap; gap: 4px; margin: 7px 0 0; padding: 0; list-style: none; }
-.dig-vibes li { padding: 1px 7px; background: rgba(214, 165, 54, .1); border-radius: 999px; color: var(--accent-2); font-size: 10.5px; }
+.dig-vibes li { padding: 1px 7px; background: rgba(214, 165, 54, .1); border-radius: 999px; color: var(--accent-2); font-size: 11.5px; }
 .dig-plays { display: block; margin-top: 6px; color: rgba(243, 233, 216, .38); font-size: 11.5px; }
 .dig-empty { grid-column: 1 / -1; padding: 40px 0; color: var(--muted); text-align: center; }
 .dig-empty button { padding: 0; background: none; border: 0; color: var(--accent-2); font: inherit; cursor: pointer; text-decoration: underline; }
@@ -1836,7 +1837,7 @@ body.has-spotlight { overflow: hidden; }
 .now-bar i { display: block; border-radius: 3px 3px 1px 1px; background: linear-gradient(180deg, var(--accent), rgba(232, 98, 42, .45)); }
 .now-bar.is-today i { background: linear-gradient(180deg, var(--accent-2), rgba(214, 165, 54, .5)); }
 .now-bar.is-future i { height: 3px; background: rgba(243, 233, 216, .08); }
-.now-bar span { height: 16px; margin-top: 4px; color: rgba(243, 233, 216, .4); font-size: 10.5px; text-align: center; white-space: nowrap; }
+.now-bar span { height: 16px; margin-top: 4px; color: rgba(243, 233, 216, .55); font-size: 11px; text-align: center; white-space: nowrap; }
 .now-bars-week .now-bar span { font-size: 11px; }
 .now-new { margin: 12px 0 0; color: var(--muted); font-size: 12.5px; }
 .now-covers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
@@ -1890,3 +1891,57 @@ a.now-cover:hover .cover-xs { outline: 2px solid var(--accent-2); outline-offset
 .spotify-session a { color: inherit; }
 /* Os amigos (sem Spotify conectado) já abrem o disco pelo Play. */
 [data-modo="publico"]:not(.spotify-on) .album-link { display: none; }
+
+/* Grão do papel: um ladrilho pequeno repetido por cima de tudo. Era um filtro
+   SVG de tela cheia com mix-blend-mode, que o navegador recompõe a cada
+   rolagem — pesado no celular. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: url("grain.png") 0 0 / 96px 96px;
+}
+
+/* Foco pelo teclado: o mesmo contorno em tudo que é clicável. */
+a:focus-visible, button:focus-visible, select:focus-visible, label:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+/* Barra de seções da página do ano: a contagem de cada uma. */
+.chapters a small { margin-left: 3px; color: var(--muted); font-size: 11.5px; }
+.year-page .chapters { margin-bottom: 4px; }
+
+/* Garimpo no celular: os filtros ocupavam mais de uma tela antes do primeiro
+   disco; ficam recolhidos atrás de um botão. */
+.dig-filter-toggle { display: none; }
+@media (max-width: 600px) {
+  .dig-filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font: inherit;
+    font-weight: 560;
+    cursor: pointer;
+  }
+  .dig-filter-toggle b {
+    min-width: 22px;
+    padding: 0 6px;
+    background: var(--accent);
+    border-radius: 999px;
+    color: #241A30;
+    font-size: 12.5px;
+    text-align: center;
+  }
+  .dig-filter-toggle span { margin-left: auto; color: var(--muted); }
+  .dig-browse:not(.filters-open) .dig-filters { display: none; }
+  .dig-browse.filters-open .dig-filters { margin-top: 14px; }
+}
